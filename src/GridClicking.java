@@ -13,7 +13,6 @@ public class GridClicking extends JPanel {
     private int size;
     private int flagCounter = 25;
     private boolean[][] isMine;
-    private button re;
 
     public GridClicking(int width, int height) {
         setSize(width, height);
