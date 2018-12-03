@@ -9,24 +9,22 @@ import java.awt.event.MouseListener;
 //TODO: can't play after lose; after lose, if flag placed in the wrong place, tell; after lose, reveal all numbers
 
 public class GridClicking extends JPanel {
-    private int[][] board;
-    private boolean[][] reveal;
-    private int[][] flag;
-//    private int size, flagCounter;
-//    private int mine = 25;
-    private int size;
-    private int flagCounter = 1;
-    private boolean[][] isMine;
+    private int[][] board, flag;
+    private boolean[][] reveal, isMine, isGrey;
+    private int size, flagCounter;
+    private int mine = 25;
     private JButton re = new JButton("Restart");
 
     public GridClicking(int width, int height) {
         setSize(width, height);
 
+        flagCounter = mine;
         re.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 board = new int[15][15];
                 reveal =  new boolean[board.length][board[0].length];
+                isGrey = new boolean[board.length][board[0].length];
 //                flag =  new int[board.length][board[0].length];
                 for (int r = 0; r < board.length; r++) {
                     for (int c = 0; c < board[0].length; c++) {
@@ -34,7 +32,9 @@ public class GridClicking extends JPanel {
                     }
                 }
                 isMine = new boolean[board.length][board[0].length];
-                plantMines(1);
+                mine = 25;
+                flagCounter = mine;
+                plantMines(mine);
                 size = 30;
                 grabFocus();
                 repaint();
@@ -50,18 +50,21 @@ public class GridClicking extends JPanel {
         reveal =  new boolean[board.length][board[0].length];
         flag =  new int[board.length][board[0].length];
         isMine = new boolean[board.length][board[0].length];
+        isGrey = new boolean[board.length][board[0].length];
 
 
         for (int r = 0; r < board.length; r++) {
             for (int c = 0; c < board[0].length; c++) {
                 reveal[r][c] = false;
                 isMine[r][c] = false;
+                isGrey[r][c] = false;
                 flag[r][c] = 1;
             }
         }
 
-        plantMines(1);
+        plantMines(mine);
         size = 30;
+//        setGray = 0;
         setupMouseListener();
     }
 
@@ -80,10 +83,13 @@ public class GridClicking extends JPanel {
                 }else
                     g2.drawRect(c * size, r * size, size, size);
 
+                if(isGrey[r][c] && reveal[r][c]){
+                   reveal[r][c] = false;
+                }
+
                 if(flag[r][c] == 2) {
                     g2.setColor(Color.GRAY);
                     g2.fillRect(c * size, r * size, size, size);
-//                    flagCounter --;
                 }
 
                 if(board[r][c] != 0)
@@ -120,25 +126,27 @@ public class GridClicking extends JPanel {
     public void revealCell(int r, int c){
         if(r >= 0 && r < board.length && c >= 0 && c < board[0].length) {
 
-            if (reveal[r][c] == false) {
-                reveal[r][c] = true;
-                if (board[r][c] == 0) {
-                    revealCell(r, c + 1);
-                    revealCell(r, c - 1);
-                    revealCell(r + 1, c);
-                    revealCell(r - 1, c);
+//            if (isGrey == false) {
+                if (reveal[r][c] == false) {
+                    reveal[r][c] = true;
+                    if (board[r][c] == 0) {
+                        revealCell(r, c + 1);
+                        revealCell(r, c - 1);
+                        revealCell(r + 1, c);
+                        revealCell(r - 1, c);
 
-                    if (isLegal(r - 1, c - 1) && board[r - 1][c - 1] > 0)
-                        revealCell(r - 1, c - 1);
-                    if (isLegal(r - 1, c + 1) && board[r - 1][c + 1] > 0)
-                        revealCell(r - 1, c + 1);
-                    if (isLegal(r + 1, c - 1) && board[r + 1][c - 1] > 0)
-                        revealCell(r + 1, c - 1);
-                    if (isLegal(r + 1, c + 1) && board[r + 1][c + 1] > 0)
-                        revealCell(r + 1, c + 1);
+                        if (isLegal(r - 1, c - 1) && board[r - 1][c - 1] > 0)
+                            revealCell(r - 1, c - 1);
+                        if (isLegal(r - 1, c + 1) && board[r - 1][c + 1] > 0)
+                            revealCell(r - 1, c + 1);
+                        if (isLegal(r + 1, c - 1) && board[r + 1][c - 1] > 0)
+                            revealCell(r + 1, c - 1);
+                        if (isLegal(r + 1, c + 1) && board[r + 1][c + 1] > 0)
+                            revealCell(r + 1, c + 1);
+                    }
                 }
             }
-        }
+//        }
         repaint();
     }
 
@@ -146,10 +154,15 @@ public class GridClicking extends JPanel {
         if(isLegal(r, c)){
             if(flag[r][c] == 1) {
                 flag[r][c] = 2;
+                isGrey[r][c] = true;
+
+//                setGray = 100;
                 flagCounter --;
 //                reveal[r][c] = true;
             }else {
                 flag[r][c] = 1;
+                isGrey[r][c] = false;
+//                setGray = 0;
                 flagCounter ++;
             }
             if(flag[r][c] == 0)
@@ -223,7 +236,7 @@ public class GridClicking extends JPanel {
             }
         }
 
-        if(count == 1)
+        if(count == mine)
             return true;
         return false;
     }
@@ -252,7 +265,7 @@ public class GridClicking extends JPanel {
 
                 if(e.getButton() == MouseEvent.BUTTON1) {
                     revealCell(r, c);
-                    if (isLegal(r, c))
+                    if (isLegal(r, c) && flag[r][c] != 2) //&& setGray != 100
                         isMine(r, c);
                 }
                 else {
